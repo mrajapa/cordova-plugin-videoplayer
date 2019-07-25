@@ -256,7 +256,7 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
         }
     };
     
-    private OnReadyListener onErrorListener = new OnErrorListener()
+    private OnErrorListener onErrorListener = new OnErrorListener()
     {
         @Override
         public void onError(ErrorEvent errorEvent)
