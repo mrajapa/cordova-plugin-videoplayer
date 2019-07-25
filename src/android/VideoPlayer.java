@@ -6,10 +6,6 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.res.AssetFileDescriptor;
-import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnCompletionListener;
-import android.media.MediaPlayer.OnErrorListener;
-import android.media.MediaPlayer.OnPreparedListener;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
@@ -19,7 +15,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.LinearLayout;
-import android.widget.VideoView;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
@@ -27,7 +22,32 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.PluginResult;
 import org.json.JSONException;
-import org.json.JSONObject;
+
+import com.google.android.exoplayer2.drm.UnsupportedDrmException;
+
+import com.bitmovin.player.BitmovinPlayer;
+import com.bitmovin.player.BitmovinPlayerView;
+import com.bitmovin.player.api.event.data.PlaybackFinishedEvent;
+import com.bitmovin.player.api.event.data.ReadyEvent;
+import com.bitmovin.player.api.event.data.ErrorEvent;
+import com.bitmovin.player.api.event.listener.OnErrorListener;
+import com.bitmovin.player.api.event.listener.OnPlaybackFinishedListener;
+import com.bitmovin.player.api.event.listener.OnReadyListener;
+import com.bitmovin.player.config.PlaybackConfiguration;
+import com.bitmovin.player.config.PlayerConfiguration;
+import com.bitmovin.player.config.StyleConfiguration;
+import com.bitmovin.player.config.drm.DRMConfiguration;
+import com.bitmovin.player.config.drm.DRMSystems;
+import com.bitmovin.player.config.media.DASHSource;
+import com.bitmovin.player.config.media.SourceConfiguration;
+import com.bitmovin.player.config.media.SourceItem;
+import com.bitmovin.player.config.network.NetworkConfiguration;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, OnPreparedListener, OnErrorListener, OnDismissListener {
 
@@ -38,10 +58,13 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
     private CallbackContext callbackContext = null;
 
     private Dialog dialog;
-
-    private VideoView videoView;
-
-    private MediaPlayer player;
+    
+    private BitmovinPlayerView bitmovinPlayerView;
+    
+    private BitmovinPlayer bitmovinPlayer;
+    
+    private ExecutorService executor
+            = Executors.newSingleThreadExecutor();
 
     /**
      * Executes the request and returns PluginResult.
@@ -57,7 +80,8 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
 
             CordovaResourceApi resourceApi = webView.getResourceApi();
             String target = args.getString(0);
-            final JSONObject options = args.getJSONObject(1);
+            String drmLicenseUrl = args.getString(1);
+            String spoofIpAddress = args.getString(2);
 
             String fileUriStr;
             try {
@@ -66,15 +90,26 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
             } catch (IllegalArgumentException e) {
                 fileUriStr = target;
             }
+            
+            String drmLicenseUriStr;
+            try {
+                Uri drmLicenseUri = resourceApi.remapUri(Uri.parse(drmLicenseUrl));
+                drmLicenseUriStr = drmLicenseUri.toString();
+            } catch (IllegalArgumentException e) {
+                drmLicenseUriStr = drmLicenseUrl;
+            }
 
             Log.v(LOG_TAG, fileUriStr);
+            Log.v(LOG_TAG, drmLicenseUriStr);
+            Log.v(LOG_TAG, spoofIpAddress);
 
             final String path = stripFileProtocol(fileUriStr);
+            final String drmLicensePath = stripFileProtocol(drmLicenseUriStr);
 
             // Create dialog in new thread
             cordova.getActivity().runOnUiThread(new Runnable() {
                 public void run() {
-                    openVideoDialog(path, options);
+                    openVideoDialog(path, drmLicensePath, spoofIpAddress);
                 }
             });
 
@@ -87,11 +122,11 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
             return true;
         }
         else if (action.equals("close")) {
-            if (dialog != null) {
-                if(player.isPlaying()) {
-                    player.stop();
+            if (dialog != null && bitmovinPlayer != null) {
+                if(bitmovinPlayer.isPlaying()) {
+                    bitmovinPlayer.stop();
                 }
-                player.release();
+                bitmovinPlayer.destroy();
                 dialog.dismiss();
             }
 
@@ -122,7 +157,7 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    protected void openVideoDialog(String path, JSONObject options) {
+    protected void openVideoDialog(String path, String drmLicensePath, String spoofIpAddress) {
         // Let's create the main dialog
         dialog = new Dialog(cordova.getActivity(), android.R.style.Theme_NoTitleBar);
         dialog.getWindow().getAttributes().windowAnimations = android.R.style.Animation_Dialog;
@@ -137,99 +172,48 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
         main.setOrientation(LinearLayout.VERTICAL);
         main.setHorizontalGravity(Gravity.CENTER_HORIZONTAL);
         main.setVerticalGravity(Gravity.CENTER_VERTICAL);
+        
+        // Create a new SourceItem. In this case we are loading a DASH source.
+        String sourceURL = path; // "http://bitmovin-a.akamaihd.net/content/art-of-motion_drm/mpds/11331.mpd";
+        SourceItem sourceItem = new SourceItem(new DASHSource(sourceURL));
 
-        videoView = new VideoView(cordova.getActivity());
-        videoView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-        // videoView.setVideoURI(uri);
-        // videoView.setVideoPath(path);
-        main.addView(videoView);
+        // Creating a new PlayerConfiguration
+        PlayerConfiguration playerConfiguration = new PlayerConfiguration();
 
-        player = new MediaPlayer();
-        player.setOnPreparedListener(this);
-        player.setOnCompletionListener(this);
-        player.setOnErrorListener(this);
+        // Assign created SourceConfiguration to the PlayerConfiguration
+        SourceConfiguration sourceConfiguration = new SourceConfiguration();
+        String drmLicenseUrl = drmLicensePath;
+        DRMConfiguration drmConfiguration = new DRMConfiguration.Builder()
+                .uuid(DRMSystems.WIDEVINE_UUID)
+                .licenseUrl(drmLicenseUrl)
+                .putHttpHeader("X-Forwarded-For", spoofIpAddress)
+                .build();
+        sourceItem.addDRMConfiguration(drmConfiguration);
+        sourceConfiguration.addSourceItem(sourceItem);
+        playerConfiguration.setSourceConfiguration(sourceConfiguration);
 
-        if (path.startsWith(ASSETS)) {
-            String f = path.substring(15);
-            AssetFileDescriptor fd = null;
-            try {
-                fd = cordova.getActivity().getAssets().openFd(f);
-                player.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
-            } catch (Exception e) {
-                PluginResult result = new PluginResult(PluginResult.Status.ERROR, e.getLocalizedMessage());
-                result.setKeepCallback(false); // release status callback in JS side
-                callbackContext.sendPluginResult(result);
-                callbackContext = null;
-                return;
-            }
-        }
-        else {
-            try {
-                player.setDataSource(path);
-            } catch (Exception e) {
-                PluginResult result = new PluginResult(PluginResult.Status.ERROR, e.getLocalizedMessage());
-                result.setKeepCallback(false); // release status callback in JS side
-                callbackContext.sendPluginResult(result);
-                callbackContext = null;
-                return;
-            }
-        }
+        PlaybackConfiguration playbackConfiguration = new PlaybackConfiguration();
+        playbackConfiguration.setAutoplayEnabled(true);
+        playerConfiguration.setPlaybackConfiguration(playbackConfiguration);
 
-        try {
-            float volume = Float.valueOf(options.getString("volume"));
-            Log.d(LOG_TAG, "setVolume: " + volume);
-            player.setVolume(volume, volume);
-        } catch (Exception e) {
-            PluginResult result = new PluginResult(PluginResult.Status.ERROR, e.getLocalizedMessage());
-            result.setKeepCallback(false); // release status callback in JS side
-            callbackContext.sendPluginResult(result);
-            callbackContext = null;
-            return;
-        }
-
-        if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-            try {
-                int scalingMode = options.getInt("scalingMode");
-                switch (scalingMode) {
-                    case MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING:
-                        Log.d(LOG_TAG, "setVideoScalingMode VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING");
-                        player.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
-                        break;
-                    default:
-                        Log.d(LOG_TAG, "setVideoScalingMode VIDEO_SCALING_MODE_SCALE_TO_FIT");
-                        player.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT);
-                }
-            } catch (Exception e) {
-                PluginResult result = new PluginResult(PluginResult.Status.ERROR, e.getLocalizedMessage());
-                result.setKeepCallback(false); // release status callback in JS side
-                callbackContext.sendPluginResult(result);
-                callbackContext = null;
-                return;
-            }
-        }
-
-        final SurfaceHolder mHolder = videoView.getHolder();
-        mHolder.setKeepScreenOn(true);
-        mHolder.addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                player.setDisplay(holder);
-                try {
-                    player.prepare();
-                } catch (Exception e) {
-                    PluginResult result = new PluginResult(PluginResult.Status.ERROR, e.getLocalizedMessage());
-                    result.setKeepCallback(false); // release status callback in JS side
-                    callbackContext.sendPluginResult(result);
-                    callbackContext = null;
-                }
-            }
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                player.release();
-            }
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
+        NetworkConfiguration networkConfig = new NetworkConfiguration();
+        networkConfig.setPreprocessHttpRequestCallback((httpRequestType, httpRequest) -> {
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("X-Forwarded-For", spoofIpAddress);
+            httpRequest.setHeaders(map);
+            return executor.submit(() -> {
+                return httpRequest;
+            });
         });
+        playerConfiguration.setNetworkConfiguration(networkConfig);
+
+        bitmovinPlayerView = new BitmovinPlayerView(cordova.getActivity(), playerConfiguration);
+        bitmovinPlayerView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        
+        bitmovinPlayer = bitmovinPlayerView.getPlayer();
+        addListenersToPlayer();
+        
+        main.addView(bitmovinPlayerView);
 
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.copyFrom(dialog.getWindow().getAttributes());
@@ -242,29 +226,6 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
     }
 
     @Override
-    public boolean onError(MediaPlayer mp, int what, int extra) {
-        Log.e(LOG_TAG, "MediaPlayer.onError(" + what + ", " + extra + ")");
-        if(mp.isPlaying()) {
-            mp.stop();
-        }
-        mp.release();
-        dialog.dismiss();
-        return false;
-    }
-
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-        mp.start();
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        Log.d(LOG_TAG, "MediaPlayer completed");
-        mp.release();
-        dialog.dismiss();
-    }
-
-    @Override
     public void onDismiss(DialogInterface dialog) {
         Log.d(LOG_TAG, "Dialog dismissed");
         if (callbackContext != null) {
@@ -273,5 +234,47 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
             callbackContext.sendPluginResult(result);
             callbackContext = null;
         }
+    }
+    
+    private OnReadyListener onReadyListener = new OnReadyListener()
+    {
+        @Override
+        public void onReady(ReadyEvent readyEvent)
+        {
+            bitmovinPlayer.play();
+        }
+    };
+
+    private OnPlaybackFinishedListener onPlaybackFinishedListener = new OnPlaybackFinishedListener()
+    {
+        @Override
+        public void onPlaybackFinished(PlaybackFinishedEvent playbackFinishedEvent)
+        {
+            Log.d(LOG_TAG, "MediaPlayer completed");
+            bitmovinPlayer.destroy();
+            dialog.dismiss();
+        }
+    };
+    
+    private OnReadyListener onErrorListener = new OnErrorListener()
+    {
+        @Override
+        public void onError(ErrorEvent errorEvent)
+        {
+            Log.e(TAG, "An Error occurred (" + errorEvent.getCode() + "): " + errorEvent.getMessage());
+            if(bitmovinPlayer.isPlaying()) {
+                bitmovinPlayer.stop();
+            }
+            bitmovinPlayer.destroy();
+            dialog.dismiss();
+            return false;
+        }
+    };
+    
+    protected void addListenersToPlayer()
+    {
+        this.bitmovinPlayer.addEventListener(this.onReadyListener);
+        this.bitmovinPlayer.addEventListener(this.onErrorListener);
+        this.bitmovinPlayer.addEventListener(this.onPlaybackFinishedListener);
     }
 }
