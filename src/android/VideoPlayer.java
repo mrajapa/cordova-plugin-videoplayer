@@ -261,7 +261,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         @Override
         public void onError(ErrorEvent errorEvent)
         {
-            Log.e(TAG, "An Error occurred (" + errorEvent.getCode() + "): " + errorEvent.getMessage());
+            Log.e(LOG_TAG, "An Error occurred (" + errorEvent.getCode() + "): " + errorEvent.getMessage());
             if(bitmovinPlayer.isPlaying()) {
                 bitmovinPlayer.stop();
             }
