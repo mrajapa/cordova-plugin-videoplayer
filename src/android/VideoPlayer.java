@@ -192,13 +192,13 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
                 .licenseUrl(drmLicenseUrl)
                 .putHttpHeader("X-Forwarded-For", spoofIpAddress)
                 .build();
-        sourceItem.addDRMConfiguration(drmConfiguration);
+        // sourceItem.addDRMConfiguration(drmConfiguration);
         sourceConfiguration.addSourceItem(sourceItem);
         playerConfiguration.setSourceConfiguration(sourceConfiguration);
         
-        StyleConfiguration styleConfiguration = new StyleConfiguration();
-        styleConfiguration.setPlayerUiJs("file:///android_asset/bitmovinplayer-ui.js");
-        playerConfiguration.setStyleConfiguration(styleConfiguration);
+        // StyleConfiguration styleConfiguration = new StyleConfiguration();
+        // styleConfiguration.setPlayerUiJs("file:///android_asset/bitmovinplayer-ui.js");
+        // playerConfiguration.setStyleConfiguration(styleConfiguration);
 
         PlaybackConfiguration playbackConfiguration = new PlaybackConfiguration();
         playbackConfiguration.setAutoplayEnabled(true);
