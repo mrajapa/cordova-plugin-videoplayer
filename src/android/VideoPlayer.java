@@ -124,7 +124,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         else if (action.equals("close")) {
             if (dialog != null && bitmovinPlayer != null) {
                 if(bitmovinPlayer.isPlaying()) {
-                    bitmovinPlayer.stop();
+                    bitmovinPlayer.unload();
                 }
                 bitmovinPlayer.destroy();
                 dialog.dismiss();
@@ -263,7 +263,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         {
             Log.e(LOG_TAG, "An Error occurred (" + errorEvent.getCode() + "): " + errorEvent.getMessage());
             if(bitmovinPlayer.isPlaying()) {
-                bitmovinPlayer.stop();
+                bitmovinPlayer.unload();
             }
             bitmovinPlayer.destroy();
             dialog.dismiss();
