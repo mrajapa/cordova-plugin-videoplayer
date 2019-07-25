@@ -27,6 +27,7 @@
         
         <preference name="BITMOVIN_VERSION" default="2.27.0"/>
         <framework src="com.bitmovin.player:playercore:$BITMOVIN_VERSION"/>
+        <framework src="com.android.support:appcompat-v7:27.1.1"/>
 
     </platform>
 
