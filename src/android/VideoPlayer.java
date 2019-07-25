@@ -49,7 +49,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, OnPreparedListener, OnErrorListener, OnDismissListener {
+public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
 
     protected static final String LOG_TAG = "VideoPlayer";
 
