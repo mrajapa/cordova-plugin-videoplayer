@@ -161,7 +161,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    protected void openVideoDialog(String path, String drmLicensePath, String spoofIpAddress) {
+    protected void openVideoDialog(String path, String drmLicensePath, String spoofIpAddress) throws UnsupportedDrmException {
         // Let's create the main dialog
         dialog = new Dialog(cordova.getActivity(), android.R.style.Theme_NoTitleBar);
         dialog.getWindow().getAttributes().windowAnimations = android.R.style.Animation_Dialog;
