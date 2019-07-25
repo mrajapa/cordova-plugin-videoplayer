@@ -179,7 +179,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         
         // Create a new SourceItem. In this case we are loading a DASH source.
         String sourceURL = path; // "http://bitmovin-a.akamaihd.net/content/art-of-motion_drm/mpds/11331.mpd";
-        SourceItem sourceItem = new SourceItem(new DASHSource(sourceURL));
+        SourceItem sourceItem = new SourceItem(sourceURL);
 
         // Creating a new PlayerConfiguration
         PlayerConfiguration playerConfiguration = new PlayerConfiguration();
@@ -192,7 +192,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
                 .licenseUrl(drmLicenseUrl)
                 .putHttpHeader("X-Forwarded-For", spoofIpAddress)
                 .build();
-        // sourceItem.addDRMConfiguration(drmConfiguration);
+        sourceItem.addDRMConfiguration(drmConfiguration);
         sourceConfiguration.addSourceItem(sourceItem);
         playerConfiguration.setSourceConfiguration(sourceConfiguration);
         
