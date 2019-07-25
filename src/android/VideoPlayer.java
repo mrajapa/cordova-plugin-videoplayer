@@ -109,7 +109,11 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
             // Create dialog in new thread
             cordova.getActivity().runOnUiThread(new Runnable() {
                 public void run() {
-                    openVideoDialog(path, drmLicensePath, spoofIpAddress);
+                    try {
+                        openVideoDialog(path, drmLicensePath, spoofIpAddress);
+                    } catch (UnsupportedDrmException ude) {
+                        ude.printStackTrace();
+                    }
                 }
             });
 
