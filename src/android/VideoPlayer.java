@@ -267,7 +267,6 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
             }
             bitmovinPlayer.destroy();
             dialog.dismiss();
-            return false;
         }
     };
     
