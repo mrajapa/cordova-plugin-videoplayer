@@ -104,7 +104,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
             final String path = stripFileProtocol(fileUriStr);
             final String drmLicensePath = stripFileProtocol(drmLicenseUriStr);
             
-            boolean errored = false;
+            final boolean errored = false;
 
             // Create dialog in new thread
             cordova.getActivity().runOnUiThread(new Runnable() {
