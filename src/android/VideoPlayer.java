@@ -105,7 +105,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
             final String drmLicensePath = stripFileProtocol(drmLicenseUriStr);
             final Boolean isErrored = false;
             
-            Runnable videoRunnable = createOnOffSwitchRunnable(this, isErrored, path, drmLicensePath);
+            Runnable videoRunnable = createOnOffSwitchRunnable(this, path, drmLicensePath, isErrored);
 
             // Create dialog in new thread
             cordova.getActivity().runOnUiThread(videoRunnable);
@@ -284,7 +284,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         this.bitmovinPlayer.addEventListener(this.onPlaybackFinishedListener);
     }
     
-    protected static Runnable createOnOffSwitchRunnable(final VideoPlayer videoPlayer, final Boolean isErrored, final String path, final String drmLicensePath)
+    protected static Runnable createOnOffSwitchRunnable(final VideoPlayer videoPlayer, final String path, final String drmLicensePath, final Boolean... isErrored)
     {
         Runnable R = new Runnable()
         {
@@ -293,7 +293,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
                 try {
                     videoPlayer.openVideoDialog(path, drmLicensePath);
                 } catch (UnsupportedDrmException ude) {
-                    isErrored = true;
+                    isErrored[0] = true;
                     ude.printStackTrace();
                 }
             }
