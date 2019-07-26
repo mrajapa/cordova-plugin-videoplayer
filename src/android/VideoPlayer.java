@@ -111,8 +111,8 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
             cordova.getActivity().runOnUiThread(videoRunnable);
 
             // Don't return any result now
-            PluginResult pluginResult = new PluginResult(videoRunnable.Errored ? PluginResult.Status.ERROR : PluginResult.Status.NO_RESULT);
-            pluginResult.setKeepCallback(!videoRunnable.Errored);
+            PluginResult pluginResult = new PluginResult(isErrored ? PluginResult.Status.ERROR : PluginResult.Status.NO_RESULT);
+            pluginResult.setKeepCallback(!isErrored);
             callbackContext.sendPluginResult(pluginResult);
             callbackContext = null;
 
