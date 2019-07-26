@@ -49,8 +49,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import android.view.KeyEvent;
-
 public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
 
     protected static final String LOG_TAG = "VideoPlayer";
@@ -241,66 +239,6 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
             callbackContext.sendPluginResult(result);
             callbackContext = null;
         }
-    }
-    
-    @Override
-    public boolean dispatchKeyEvent(KeyEvent event)
-    {
-        // This method is called on key down and key up, so avoid being called twice
-        if (this.bitmovinPlayerView != null && event.getAction() == KeyEvent.ACTION_DOWN)
-        {
-            if (this.handleUserInput(event.getKeyCode()))
-            {
-                return true;
-            }
-        }
-
-        // Make sure to return super.dispatchKeyEvent(event) so that any key not handled yet will work as expected
-        return super.dispatchKeyEvent(event);
-    }
-    
-    private boolean handleUserInput(int keycode)
-    {
-        switch (keycode)
-        {
-            case KeyEvent.KEYCODE_DPAD_CENTER:
-            case KeyEvent.KEYCODE_ENTER:
-            case KeyEvent.KEYCODE_NUMPAD_ENTER:
-            case KeyEvent.KEYCODE_SPACE:
-            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                this.togglePlay();
-                return true;
-            case KeyEvent.KEYCODE_MEDIA_PLAY:
-                this.bitmovinPlayer.play();
-                return true;
-            case KeyEvent.KEYCODE_MEDIA_PAUSE:
-                this.bitmovinPlayer.pause();
-                return true;
-            case KeyEvent.KEYCODE_MEDIA_STOP:
-                this.stopPlayback();
-                return true;
-            default:
-        }
-
-        return false;
-    }
-    
-    private void togglePlay()
-    {
-        if (this.bitmovinPlayer.isPlaying())
-        {
-            this.bitmovinPlayer.pause();
-        }
-        else
-        {
-            this.bitmovinPlayer.play();
-        }
-    }
-
-    private void stopPlayback()
-    {
-        this.bitmovinPlayer.pause();
-        this.bitmovinPlayer.seek(0);
     }
     
     private OnReadyListener onReadyListener = new OnReadyListener()
