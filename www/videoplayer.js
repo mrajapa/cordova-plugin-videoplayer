@@ -1,8 +1,8 @@
 var exec = require("cordova/exec");
 
 module.exports = {
-    play: function (path, drmLicensePath, spoofIpAddress, successCallback, errorCallback) {
-        exec(successCallback, errorCallback, "VideoPlayer", "play", [path, drmLicensePath, spoofIpAddress]);
+    play: function (path, drmLicensePath, successCallback, errorCallback) {
+        exec(successCallback, errorCallback, "VideoPlayer", "play", [path, drmLicensePath]);
     },
 
     close: function (successCallback, errorCallback) {
