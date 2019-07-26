@@ -81,7 +81,6 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
             CordovaResourceApi resourceApi = webView.getResourceApi();
             String target = args.getString(0);
             String drmLicenseUrl = args.getString(1);
-            String spoofIpAddress = args.getString(2);
 
             String fileUriStr;
             try {
@@ -101,7 +100,6 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
 
             Log.v(LOG_TAG, fileUriStr);
             Log.v(LOG_TAG, drmLicenseUriStr);
-            Log.v(LOG_TAG, spoofIpAddress);
 
             final String path = stripFileProtocol(fileUriStr);
             final String drmLicensePath = stripFileProtocol(drmLicenseUriStr);
@@ -110,7 +108,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
             cordova.getActivity().runOnUiThread(new Runnable() {
                 public void run() {
                     try {
-                        openVideoDialog(path, drmLicensePath, spoofIpAddress);
+                        openVideoDialog(path, drmLicensePath);
                     } catch (UnsupportedDrmException ude) {
                         ude.printStackTrace();
                     }
@@ -161,7 +159,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    protected void openVideoDialog(String path, String drmLicensePath, String spoofIpAddress) throws UnsupportedDrmException {
+    protected void openVideoDialog(String path, String drmLicensePath) throws UnsupportedDrmException {
         // Let's create the main dialog
         dialog = new Dialog(cordova.getActivity(), android.R.style.Theme_NoTitleBar);
         dialog.getWindow().getAttributes().windowAnimations = android.R.style.Animation_Dialog;
@@ -237,6 +235,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
     @Override
     public void onDismiss(DialogInterface dialog) {
         Log.d(LOG_TAG, "Dialog dismissed");
+        bitmovinPlayerView.onDestroy();
         if (callbackContext != null) {
             PluginResult result = new PluginResult(PluginResult.Status.OK);
             result.setKeepCallback(false); // release status callback in JS side
@@ -261,6 +260,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         {
             Log.d(LOG_TAG, "MediaPlayer completed");
             bitmovinPlayer.destroy();
+            bitmovinPlayerView.onDestroy();
             dialog.dismiss();
         }
     };
@@ -275,6 +275,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
                 bitmovinPlayer.unload();
             }
             bitmovinPlayer.destroy();
+            bitmovinPlayerView.onDestroy();
             dialog.dismiss();
         }
     };
