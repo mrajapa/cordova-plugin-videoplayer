@@ -104,23 +104,14 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
             final String path = stripFileProtocol(fileUriStr);
             final String drmLicensePath = stripFileProtocol(drmLicenseUriStr);
             
-            final boolean errored = false;
+            Runnable videoRunnable = createOnOffSwitchRunnable();
 
             // Create dialog in new thread
-            cordova.getActivity().runOnUiThread(new Runnable() {
-                public void run() {
-                    try {
-                        openVideoDialog(path, drmLicensePath);
-                    } catch (UnsupportedDrmException ude) {
-                        errored = true;
-                        ude.printStackTrace();
-                    }
-                }
-            });
+            cordova.getActivity().runOnUiThread(videoRunnable);
 
             // Don't return any result now
-            PluginResult pluginResult = new PluginResult(errored ? PluginResult.Status.ERROR : PluginResult.Status.NO_RESULT);
-            pluginResult.setKeepCallback(!errored);
+            PluginResult pluginResult = new PluginResult(videoRunnable.Errored ? PluginResult.Status.ERROR : PluginResult.Status.NO_RESULT);
+            pluginResult.setKeepCallback(!videoRunnable.Errored);
             callbackContext.sendPluginResult(pluginResult);
             callbackContext = null;
 
@@ -290,5 +281,24 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         this.bitmovinPlayer.addEventListener(this.onReadyListener);
         this.bitmovinPlayer.addEventListener(this.onErrorListener);
         this.bitmovinPlayer.addEventListener(this.onPlaybackFinishedListener);
+    }
+    
+    protected static Runnable createOnOffSwitchRunnable()
+    {
+        Runnable R = new Runnable()
+        {
+            private Boolean Errored = false;
+
+            public void run()
+            {
+                try {
+                    openVideoDialog(path, drmLicensePath);
+                } catch (UnsupportedDrmException ude) {
+                    Errored = true;
+                    ude.printStackTrace();
+                }
+            }
+        };
+        return R;
     }
 }
