@@ -103,6 +103,8 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
 
             final String path = stripFileProtocol(fileUriStr);
             final String drmLicensePath = stripFileProtocol(drmLicenseUriStr);
+            
+            boolean errored = false;
 
             // Create dialog in new thread
             cordova.getActivity().runOnUiThread(new Runnable() {
@@ -110,14 +112,15 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
                     try {
                         openVideoDialog(path, drmLicensePath);
                     } catch (UnsupportedDrmException ude) {
+                        errored = true;
                         ude.printStackTrace();
                     }
                 }
             });
 
             // Don't return any result now
-            PluginResult pluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
-            pluginResult.setKeepCallback(true);
+            PluginResult pluginResult = new PluginResult(errored ? PluginResult.Status.ERROR : PluginResult.Status.NO_RESULT);
+            pluginResult.setKeepCallback(!errored);
             callbackContext.sendPluginResult(pluginResult);
             callbackContext = null;
 
@@ -129,6 +132,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
                     bitmovinPlayer.unload();
                 }
                 bitmovinPlayer.destroy();
+                bitmovinPlayerView.OnDestroy();
                 dialog.dismiss();
             }
 
@@ -235,6 +239,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
     @Override
     public void onDismiss(DialogInterface dialog) {
         Log.d(LOG_TAG, "Dialog dismissed");
+        bitmovinPlayer.destroy();
         bitmovinPlayerView.onDestroy();
         if (callbackContext != null) {
             PluginResult result = new PluginResult(PluginResult.Status.OK);
