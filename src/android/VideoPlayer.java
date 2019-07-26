@@ -104,7 +104,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
             final String path = stripFileProtocol(fileUriStr);
             final String drmLicensePath = stripFileProtocol(drmLicenseUriStr);
             
-            Runnable videoRunnable = createOnOffSwitchRunnable();
+            Runnable videoRunnable = createOnOffSwitchRunnable(path, drmLicensePath);
 
             // Create dialog in new thread
             cordova.getActivity().runOnUiThread(videoRunnable);
@@ -283,7 +283,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         this.bitmovinPlayer.addEventListener(this.onPlaybackFinishedListener);
     }
     
-    protected static Runnable createOnOffSwitchRunnable()
+    protected static Runnable createOnOffSwitchRunnable(final String path, final String drmLicensePath)
     {
         Runnable R = new Runnable()
         {
