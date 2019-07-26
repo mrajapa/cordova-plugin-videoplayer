@@ -187,12 +187,13 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         // Assign created SourceConfiguration to the PlayerConfiguration
         SourceConfiguration sourceConfiguration = new SourceConfiguration();
         String drmLicenseUrl = drmLicensePath;
-        DRMConfiguration drmConfiguration = new DRMConfiguration.Builder()
+        /* DRMConfiguration drmConfiguration = new DRMConfiguration.Builder()
                 .uuid(DRMSystems.WIDEVINE_UUID)
                 .licenseUrl(drmLicenseUrl)
                 .putHttpHeader("X-Forwarded-For", spoofIpAddress)
                 .build();
-        sourceItem.addDRMConfiguration(drmConfiguration);
+        sourceItem.addDRMConfiguration(drmConfiguration); */
+        sourceItem.addDRMConfiguration(DRMSystems.WIDEVINE_UUID, drmLicenseUrl);
         sourceConfiguration.addSourceItem(sourceItem);
         playerConfiguration.setSourceConfiguration(sourceConfiguration);
         
@@ -204,7 +205,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         playbackConfiguration.setAutoplayEnabled(true);
         playerConfiguration.setPlaybackConfiguration(playbackConfiguration);
 
-        NetworkConfiguration networkConfig = new NetworkConfiguration();
+        /* NetworkConfiguration networkConfig = new NetworkConfiguration();
         networkConfig.setPreprocessHttpRequestCallback((httpRequestType, httpRequest) -> {
             Map<String, String> map = new HashMap<String, String>();
             map.put("X-Forwarded-For", spoofIpAddress);
@@ -213,7 +214,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
                 return httpRequest;
             });
         });
-        playerConfiguration.setNetworkConfiguration(networkConfig);
+        playerConfiguration.setNetworkConfiguration(networkConfig); */
 
         bitmovinPlayerView = new BitmovinPlayerView(cordova.getActivity(), playerConfiguration);
         bitmovinPlayerView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
