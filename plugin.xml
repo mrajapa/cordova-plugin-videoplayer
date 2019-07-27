@@ -23,6 +23,7 @@
             </feature>
         </config-file>
 
+        <source-file src="src/res/layout/videoplayer_activity_main.xml" target-dir="res/layout/"/>
         <source-file src="src/android/VideoPlayer.java" target-dir="src/com/mrajapa/cordova/videoplayer" />
         
         <preference name="BITMOVIN_VERSION" default="2.27.0"/>
