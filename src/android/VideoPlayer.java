@@ -211,14 +211,16 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         });
         playerConfiguration.setNetworkConfiguration(networkConfig); */
 
-        bitmovinPlayerView = new BitmovinPlayerView(cordova.getActivity(), playerConfiguration);
-        bitmovinPlayerView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        // bitmovinPlayerView = new BitmovinPlayerView(cordova.getActivity(), playerConfiguration);
+        // bitmovinPlayerView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         
-        // cordova.getActivity().setContentView(cordova.getActivity().getResources().getIdentifier("videoplayer_activity_main", "layout", cordova.getActivity().getResources().getPackageName()));
-        // bitmovinPlayerView = (BitmovinPlayerView) cordova.getActivity().findViewById(cordova.getActivity().getResources().getIdentifier("bitmovinPlayerView","id", cordova.getActivity().getResources().getPackageName()));
+        cordova.getActivity().setContentView(cordova.getActivity().getResources().getIdentifier("videoplayer_activity_main", "layout", cordova.getActivity().getResources().getPackageName()));
+        bitmovinPlayerView = (BitmovinPlayerView) cordova.getActivity().findViewById(cordova.getActivity().getResources().getIdentifier("bitmovinPlayerView","id", cordova.getActivity().getResources().getPackageName()));
         
         bitmovinPlayer = bitmovinPlayerView.getPlayer();
         addListenersToPlayer();
+        
+        bitmovinPlayer.setup(playerConfiguration);
         
         main.addView(bitmovinPlayerView);
 
