@@ -3,7 +3,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="com.bitmovin.player.samples.drm.basic.MainActivity">
+        tools:context="com.mrajapa.cordova.videoplayer.VideoPlayer">
 
     <com.bitmovin.player.BitmovinPlayerView
             android:layout_width="match_parent"
