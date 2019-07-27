@@ -167,6 +167,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         // Main container layout
         LinearLayout main = new LinearLayout(cordova.getActivity());
         main.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        main.setKeepScreenOn(true);
         main.setOrientation(LinearLayout.VERTICAL);
         main.setHorizontalGravity(Gravity.CENTER_HORIZONTAL);
         main.setVerticalGravity(Gravity.CENTER_VERTICAL);
@@ -213,6 +214,9 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         bitmovinPlayerView = new BitmovinPlayerView(cordova.getActivity(), playerConfiguration);
         bitmovinPlayerView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         
+        // cordova.getActivity().setContentView(cordova.getActivity().getResources().getIdentifier("videoplayer_activity_main", "layout", cordova.getActivity().getResources().getPackageName()));
+        // bitmovinPlayerView = (BitmovinPlayerView) cordova.getActivity().findViewById(cordova.getActivity().getResources().getIdentifier("bitmovinPlayerView","id", cordova.getActivity().getResources().getPackageName()));
+        
         bitmovinPlayer = bitmovinPlayerView.getPlayer();
         addListenersToPlayer();
         
@@ -226,6 +230,7 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         dialog.setContentView(main);
         dialog.show();
         dialog.getWindow().setAttributes(lp);
+        bitmovinPlayerView.requestFocus();
     }
 
     @Override
