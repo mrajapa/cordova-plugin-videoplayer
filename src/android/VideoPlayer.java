@@ -211,11 +211,11 @@ public class VideoPlayer extends CordovaPlugin implements OnDismissListener {
         });
         playerConfiguration.setNetworkConfiguration(networkConfig); */
 
-        // bitmovinPlayerView = new BitmovinPlayerView(cordova.getActivity(), playerConfiguration);
-        // bitmovinPlayerView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        bitmovinPlayerView = new BitmovinPlayerView(cordova.getActivity(), playerConfiguration);
+        bitmovinPlayerView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         
-        cordova.getActivity().setContentView(cordova.getActivity().getApplication().getResources().getIdentifier("videoplayer_activity_main", "layout", cordova.getActivity().getPackageName()));
-        bitmovinPlayerView = (BitmovinPlayerView) cordova.getActivity().findViewById(cordova.getActivity().getApplication().getResources().getIdentifier("bitmovinPlayerView","id", cordova.getActivity().getPackageName()));
+        // cordova.getActivity().setContentView(cordova.getActivity().getApplication().getResources().getIdentifier("videoplayer_activity_main", "layout", cordova.getActivity().getPackageName()));
+        // bitmovinPlayerView = (BitmovinPlayerView) cordova.getActivity().findViewById(cordova.getActivity().getApplication().getResources().getIdentifier("bitmovinPlayerView","id", cordova.getActivity().getPackageName()));
         
         bitmovinPlayer = bitmovinPlayerView.getPlayer();
         addListenersToPlayer();
